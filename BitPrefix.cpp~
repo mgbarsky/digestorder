@@ -1,0 +1,132 @@
+#include "BitPrefix.h"
+
+uint32 BitPrefix::masks_array32[]={
+	(uint32)  ((uint32)1 << 0),
+	(uint32)  ((uint32)1 << 1),
+	(uint32)  ((uint32)1 << 2),
+	(uint32)  ((uint32)1 << 3),
+	(uint32)  ((uint32)1 << 4),
+	(uint32)  ((uint32)1 << 5),
+	(uint32)  ((uint32)1 << 6),
+	(uint32)  ((uint32)1 << 7),
+(uint32)  ((uint32)1 << 8),
+(uint32)  ((uint32)1 << 9),
+(uint32)  ((uint32)1 << 10),
+(uint32)  ((uint32)1 << 11),
+(uint32)  ((uint32)1 << 12),
+(uint32)  ((uint32)1 << 13),
+(uint32)  ((uint32)1 << 14),
+(uint32)  ((uint32)1 << 15),
+	(uint32)  ((uint32)1 << 16),
+	(uint32)  ((uint32)1 << 17),
+	(uint32)  ((uint32)1 << 18),
+	(uint32)  ((uint32)1 << 19),
+	(uint32)  ((uint32)1 << 20),
+	(uint32)  ((uint32)1 << 21),
+	(uint32)  ((uint32)1 << 22),
+	(uint32)  ((uint32)1 << 23),
+(uint32)  ((uint32)1 << 24),
+(uint32)  ((uint32)1 << 25),
+(uint32)  ((uint32)1 << 26),
+(uint32)  ((uint32)1 << 27),
+(uint32)  ((uint32)1 << 28),
+(uint32)  ((uint32)1 << 29),
+(uint32)  ((uint32)1 << 30),
+(uint32)  ((uint32)1 << 31)
+};
+
+unsigned char BitPrefix::masks_array8[8]={
+	(unsigned char)  (1 << 0),
+	(unsigned char)  (1 << 1),
+	(unsigned char)  (1 << 2),
+	(unsigned char)  (1 << 3),
+	(unsigned char)  (1 << 4),
+	(unsigned char)  (1 << 5),
+	(unsigned char)  (1 << 6),
+	(unsigned char)  (1 << 7),
+};
+
+void  BitPrefix::printBitPrefix (unsigned char *prefix)
+{
+    for (int i=0; i< 8; i++)
+        printf ("%d",getBitInChar (prefix, i));
+    printf ("\n");
+}
+
+short BitPrefix::getBitInChar (unsigned char *bitSeq, int pos)
+{
+    return (short)((*bitSeq & masks_array8[8-pos-1])!=0);
+}
+
+
+void BitPrefix::setPrefix (unsigned char *seq, int suffixLength, unsigned char *prefix)
+{
+    *prefix = 0;
+    for (int i=0; i< suffixLength && i < 4; i++)
+    {
+        char currChar = seq [i];
+        printf("%c",currChar);
+        int currentBit = 2*i;
+        switch( currChar ) 
+	    {
+	        case 'A': case 'a': //00				
+		        break;
+	        case 'C': case 'c': //01
+                (*prefix)|=masks_array8[8-(currentBit+1) -1];			
+		        break;
+	        case 'G': case 'g': //10
+                (*prefix)|=masks_array8[8-currentBit -1];
+		        break;
+	        case 'T': case 't'://11
+		        (*prefix)|=masks_array8[8-currentBit -1];
+		        (*prefix)|=masks_array8[8-(currentBit+1) -1];
+		        break;
+	        default: //unknown character			
+		        break;
+	    }
+    }
+    if (suffixLength > 0) 
+    {
+        printf("-");
+        BitPrefix:: printBitPrefix (prefix);
+    }
+}
+void BitPrefix::setCharacterAtPos (char c, int pos, uint32 *bitArray)
+{
+    //first, determine the position in 2-bit array of bits
+    int posInBitsArray = pos*2 +8;
+    int arrIndex = posInBitsArray /32;
+    int currentBit = posInBitsArray % 32;
+
+    switch( c ) 
+	{
+	    case 'A': case 'a': //00				
+		    break;
+	    case 'C': case 'c': //01
+            bitArray[arrIndex]|=masks_array32[32-(currentBit+1) -1];			
+		    break;
+	    case 'G': case 'g': //10
+            bitArray[arrIndex]|=masks_array32[32-currentBit -1];
+		    break;
+	    case 'T': case 't'://11
+		    bitArray[arrIndex]|=masks_array32[32-currentBit -1];
+		    bitArray[arrIndex]|=masks_array32[32-(currentBit+1) -1];
+		    break;
+	    default: //unknown character			
+		    break;
+	}
+}
+
+void BitPrefix::setSuffixLength (int length, uint32 *bitArray)
+{    
+    uint32 len_shifted = ((uint32)length << 24);
+    //set first 8 bits of bitArray[0] to length
+    bitArray[0] &= REMOVE_SUFFIX_LENGTH_MASK;
+    bitArray[0]|= len_shifted;
+}
+
+
+
+
+
+
